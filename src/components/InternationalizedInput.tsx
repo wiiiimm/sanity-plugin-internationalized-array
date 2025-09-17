@@ -40,17 +40,29 @@ export default function InternationalizedInput(
   // Create a wrapped onChange handler to intercept patches for paste operations
   const wrappedOnChange = useCallback(
     (patches: any) => {
+      // Ensure patches is an array before proceeding with paste logic
+      // For single patch operations (like unset), pass through directly
+      if (!Array.isArray(patches)) {
+        return originalOnChange(patches)
+      }
+
       // Check if this is a paste operation into an empty or uninitialized Portable Text field
       const valueField = props.value?.value
       const isEmptyOrUndefined =
         valueField === undefined ||
+        valueField === null ||
         (Array.isArray(valueField) && valueField.length === 0)
 
-      if (isEmptyOrUndefined && Array.isArray(patches)) {
+      if (isEmptyOrUndefined) {
         // Check for insert patches that are trying to operate on a non-existent structure
         const hasProblematicInsert = patches.some((patch: any) => {
+          // Ensure patch exists and has required properties
+          if (!patch || typeof patch !== 'object') {
+            return false
+          }
+
           // Look for insert patches targeting the value field or direct array index
-          if (patch.type === 'insert' && patch.path && patch.path.length > 0) {
+          if (patch.type === 'insert' && patch.path && Array.isArray(patch.path) && patch.path.length > 0) {
             // The path might be ['value', index] or just [index] depending on context
             const isTargetingValue =
               patch.path[0] === 'value' || typeof patch.path[0] === 'number'
@@ -68,7 +80,12 @@ export default function InternationalizedInput(
 
           // Transform the patches to ensure they work with the nested structure
           const fixedPatches = patches.map((patch: any) => {
-            if (patch.type === 'insert' && patch.path) {
+            // Ensure patch exists and has required properties
+            if (!patch || typeof patch !== 'object') {
+              return patch
+            }
+
+            if (patch.type === 'insert' && patch.path && Array.isArray(patch.path)) {
               // Ensure the path is correct for the nested structure
               const fixedPath =
                 patch.path[0] === 'value'
