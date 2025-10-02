@@ -7,7 +7,6 @@ import {
   isSanityDocument,
   PatchEvent,
   setIfMissing,
-  useClient,
   useSchema,
 } from 'sanity'
 import {useDocumentPane} from 'sanity/structure'
@@ -23,7 +22,9 @@ type DocumentAddButtonsProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: Record<string, any> | undefined
 }
-export default function DocumentAddButtons(props: DocumentAddButtonsProps) {
+export default function DocumentAddButtons(
+  props: DocumentAddButtonsProps
+): React.ReactElement {
   const {filteredLanguages} = useInternationalizedArrayContext()
   const value = isSanityDocument(props.value) ? props.value : undefined
 
@@ -35,7 +36,7 @@ export default function DocumentAddButtons(props: DocumentAddButtonsProps) {
 
   // Helper function to determine if a field should be initialized as an array
   const getInitialValueForType = useCallback(
-    (typeName: string): any => {
+    (typeName: string): unknown => {
       if (!typeName) return undefined
 
       // Extract the base type name from internationalized array type
@@ -61,7 +62,9 @@ export default function DocumentAddButtons(props: DocumentAddButtonsProps) {
         const schemaType = schema.get(typeName)
         if (schemaType) {
           // Check if this is an object type with a 'value' field
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const valueField = (schemaType as any)?.fields?.find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (f: any) => f.name === 'value'
           )
           if (valueField) {
